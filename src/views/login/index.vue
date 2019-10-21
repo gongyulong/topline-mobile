@@ -84,7 +84,7 @@ export default {
           method: 'POST',
           data: this.user
         })
-        console.log(res)
+        // console.log(res)
         // 将用户信息保存到 vuex 中
         this.$store.commit('setUser', res)
         // 关闭加载动画

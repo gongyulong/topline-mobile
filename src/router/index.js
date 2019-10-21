@@ -24,11 +24,19 @@ const routes = [
     name: 'login',
     component: () => import('@/views/login')
   },
-  // home 主页路由
+  // layout 布局路由
   {
-    path: '/home',
-    name: 'home',
-    component: () => import('@/views/home')
+    path: '/layout',
+    name: 'layout',
+    component: () => import('@/views/layout'),
+    children: [
+      // home 作为布局组件的子路由
+      {
+        path: '/home',
+        name: 'home',
+        component: () => import('@/views/home')
+      }
+    ]
   }
 ]
 

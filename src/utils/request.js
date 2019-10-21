@@ -3,13 +3,23 @@
 
 // 导入axios
 import axios from 'axios'
+// 导入store
+import store from '@/store'
 // 创建一个 axios 实例
 const instance = axios.create({
   baseURL: 'http://ttapi.research.itcast.cn/app/v1_0' // 请求基准地址
 })
 // 设置请求拦截器
 instance.interceptors.request.use(config => {
-// config 所有的请求信息
+  // console.log(store.state)
+  // 保存用户信息到user
+  let user = store.state.user
+  // 判断用户是否登录：判断 store 中的 state 中的 user 是否存在
+  if (user) {
+    // 向请求头中添加 token
+    config.headers.Authorization = `Bearer ${user.token}`
+  }
+  // config 所有的请求信息
   return config
 }, error => {
   return Promise.reject(error)
