@@ -17,7 +17,7 @@ instance.interceptors.request.use(config => {
 // 设置响应拦截器
 instance.interceptors.response.use(response => {
 // response 服务器响应回来的数据
-  return response
+  return response.data.data
 }, error => {
   return Promise.reject(error)
 })

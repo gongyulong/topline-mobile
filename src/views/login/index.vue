@@ -4,21 +4,26 @@
     <van-nav-bar title="登录" />
     <!-- 输入框 -->
     <van-cell-group>
-      <van-field v-model="user.mobile" clearable placeholder="请输入手机号" :error-message="errmsg.mobile">
+      <van-field v-model="user.mobile" clearable placeholder="请输入手机号" :error-message="errmsg.mobile" >
         <template slot="left-icon">
           <i class="iconfont icon-phone1"></i>
         </template>
       </van-field>
-      <van-field v-model="user.code" type="password" placeholder="请输入验证码" :error-message="errmsg.code">
+      <van-field
+        v-model="user.code"
+        type="password"
+        placeholder="请输入验证码"
+        :error-message="errmsg.code"
+      >
         <template slot="left-icon">
           <i class="iconfont icon-lock named-args2"></i>
         </template>
-         <van-button class="code-btn" slot="button" size="small" round>发送验证码</van-button>
+        <van-button class="code-btn" slot="button" size="small" round>发送验证码</van-button>
       </van-field>
     </van-cell-group>
     <!-- 登录按钮 -->
     <div class="login-btn">
-      <van-button class="l-btn" type="info" size="large" @click="login">登录</van-button>
+      <van-button class="l-btn" type="info" size="large" @click="login" :loading='loginLoading' loading-text="登录中">登录</van-button>
     </div>
   </div>
 </template>
@@ -37,7 +42,9 @@ export default {
       errmsg: {
         mobile: '',
         code: ''
-      }
+      },
+      // 加载动画
+      loginLoading: false
     }
   },
   methods: {
@@ -65,21 +72,32 @@ export default {
       return true
     },
     // 登录请求数据
-    login () {
+    async login () {
       // 参数的验证
       this.validData()
-      // 请求数据
-      userLogin(this.$http, {
-        url: '/authorizations',
-        method: 'POST',
-        data: this.user
-      }).then(res => {
+      try {
+        // 开启加载动画
+        this.loginLoading = true
+        // 请求数据
+        let res = await userLogin(this.$http, {
+          url: '/authorizations',
+          method: 'POST',
+          data: this.user
+        })
         console.log(res)
-        window.localStorage.setItem('user', JSON.stringify(res.data.data))
+        // 将用户信息保存到 vuex 中
+        this.$store.commit('setUser', res)
+        // 关闭加载动画
+        this.loginLoading = false
+        // 跳转到 home
         this.$router.push('/home')
-      }).catch(err => {
+      } catch (err) {
         console.log(err)
-      })
+        this.$toast.fail('手机号或者验证码有误')
+        setTimeout(() => {
+          this.loginLoading = false
+        }, 1000)
+      }
     }
   }
 }
@@ -93,13 +111,13 @@ export default {
   }
 }
 .code-btn {
-    background-color: #eee;
-    color: #aaa;
+  background-color: #eee;
+  color: #aaa;
 }
 .login-btn {
-    margin: 15px;
-    .l-btn {
-        border-radius: 5px;
-    }
+  margin: 15px;
+  .l-btn {
+    border-radius: 5px;
+  }
 }
 </style>
