@@ -4,12 +4,14 @@
     <van-nav-bar title="首页" fixed />
     <div class="tab-content">
       <!-- tab栏 频道列表-->
-      <van-tabs>
+      <van-tabs v-model="activeTab">
+        <!-- {{activeTab}} -->
         <van-tab v-for="(item, index) in channelsList" :key="index" :title="item.name">
-          <van-pull-refresh v-model="isLoading" @refresh="onRefresh">
-            <!-- 上拉刷新  v-model：pull 的加载状态 true 正在加载 false 加载完毕 -->
-            <van-list v-model="loading" :finished="finished" finished-text="没有更多了" @load="onLoad">
-              <van-cell v-for="item in list" :key="item" :title="item" />
+          <!-- 下拉刷新 refresh组件-->
+          <van-pull-refresh v-model="item.pull" @refresh="onRefresh">
+            <!-- 上拉刷新list组件  v-model：pull 的加载状态 true 正在加载 false 加载完毕 -->
+            <van-list v-model="item.up" :finished="item.finished" finished-text="没有更多了"  @load="onLoad" >
+              <van-cell  class="mycell" v-for="(subitem, subindex) in item.articleList" :key="subindex" :title="subitem.title" />
             </van-list>
           </van-pull-refresh>
         </van-tab>
@@ -24,50 +26,134 @@
 
 <script>
 // 导入请求频道的方法
-import { getchannle } from '@/api/channle.js'
+import { getChannle } from '@/api/channle.js'
+// 导入请求文章的方法
+import { apigetArticle } from '@/api/article.js'
 export default {
   data () {
     return {
       // 频道数据列表
       channelsList: [],
-      // 加载状态
-      loading: false,
-      // 加载完毕
-      finished: false,
-      // 测试数据
-      list: '',
-      // 下拉刷新数据
-      isLoading: false
+      // 当前选中的van-tabs下标
+      activeTab: 0
     }
   },
   methods: {
     // 获取频道数据
     async getChannelList () {
       try {
-        let res = await getchannle(this.$http, {
-          url: '/user/channels',
-          method: 'GET'
-        })
-        console.log(res)
-        // 将数据保存到 channelsList
-        this.channelsList = res.channels
+        // 得到用户信息
+        let user = this.$store.state.user
+        // 判断 是否有登录
+        if (!user) {
+          // 得到 localstorage 中频道数据
+          let channels = JSON.parse(window.localStorage.getItem('channels'))
+          // 判断 localstorage 中是否有频道数据
+          if (channels) {
+            // 将数据直接加载
+            this.channelsList = channels
+          } else {
+            // 如果不存在，再去服务器中得到返回的默认 7 条频道数据
+            let res = await getChannle(this.$http, {
+              url: '/user/channels',
+              method: 'GET'
+            })
+            // 将服务器返回的数据保存到 channelsList
+            this.channelsList = res.channels
+          }
+        } else {
+          // 如果登录，去服务器中得到返回 登录后频道数据
+          let res = await getChannle(this.$http, {
+            url: '/user/channels',
+            method: 'GET'
+          })
+          // console.log(res)
+          // 将数据保存到 channelsList
+          this.channelsList = res.channels
+        }
+        // 调用动态添加属性方法
+        this.addAttrToChannels()
       } catch {
         // 提示信息
         this.$toast.fail('获取信息失败')
       }
     },
-    // 上拉刷新
-    onLoad () {
-      this.list = [...this.list, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-      // console.log('loaded')
-      this.loading = false
+    // 频道数据源:动态添加属性
+    addAttrToChannels () {
+      this.channelsList.forEach(item => {
+        // 上拉状态: up
+        this.$set(item, 'up', false)
+        // 上拉结束状态： finished
+        this.$set(item, 'finished', false)
+        // 下拉状态：pull
+        this.$set(item, 'pull', false)
+        // 添加list 数据源articleList
+        this.$set(item, 'articleList', [])
+        // 添加timestamp
+        this.$set(item, 'timestamp', 0)
+      })
+      // console.log(this.channelsList)
+    },
+    // 获取list组件文章数据
+    // 上拉触底、list刷新触发
+    async onLoad () {
+      try {
+        // 得到当前选中的频道
+        let channel = this.channelsList[this.activeTab]
+        // 得到当前频道id
+        let channleid = channel.id
+        // 定义一个 timestamp
+        let timestamp
+        // 判断： 是否是第一次请求
+        if (channel.timestamp === 0) {
+          timestamp = Date.now()
+        } else {
+          timestamp = channel.timestamp
+        }
+        // 请求当前选中频道下的文章列表
+        let res = await apigetArticle(this.$http2, {
+          url: '/articles',
+          method: 'GET',
+          query: {
+            // 需要的频道 id
+            channel_id: channleid,
+            // 当前时间戳（分页标识）
+            timestamp: timestamp,
+            // 不包含置顶
+            with_top: 0
+          }
+        })
+        console.log(res)
+        // 将数据源追加 到当前频道下的 articleList 中
+        channel.articleList = [...channel.articleList, ...res.results]
+        // 保存timestamp
+        channel.timestamp = res.pre_timestamp
+        // 判断返回的数据是否为空
+        if (res.pre_timestamp === null) {
+          // 说明数据已经加载完成
+          channel.finished = true
+        }
+        // 关闭加载状态
+        channel.up = false
+      } catch {
+        // 提示信息
+        this.$toast.fail('获取信息失败')
+      }
     },
     // 下拉刷新
     onRefresh () {
-      console.log('onrefresh')
-      this.list = []
+      // 得到当前选中的频道
+      let channel = this.channelsList[this.activeTab]
+      // 清除文章内容数据源
+      channel.articleList = []
+      // 将相关数据设置为默认值
+      channel.timestamp = 0
+      channel.up = false
+      channel.finished = false
+      // 重新加载list组件文章获取数据
       this.onLoad()
-      this.isLoading = false
+      // 将下拉状态重置为 false
+      channel.pull = false
     }
   },
   created () {
@@ -111,5 +197,8 @@ export default {
 .home /deep/ .van-nav-bar {
   height: 50px;
   line-height: 50px;
+}
+.mycell {
+  line-height: 100px;
 }
 </style>

@@ -31,12 +31,41 @@ instance.interceptors.response.use(response => {
 }, error => {
   return Promise.reject(error)
 })
+
+// 创建另一个 axios2 实例 目的是设置另一个接口基地址
+const instance2 = axios.create({
+  baseURL: 'http://ttapi.research.itcast.cn/app/v1_1' // 请求基准地址2
+})
+// 设置请求拦截器
+instance2.interceptors.request.use(config => {
+  // console.log(store.state)
+  // 保存用户信息到user
+  let user = store.state.user
+  // 判断用户是否登录：判断 store 中的 state 中的 user 是否存在
+  if (user) {
+    // 向请求头中添加 token
+    config.headers.Authorization = `Bearer ${user.token}`
+  }
+  // config 所有的请求信息
+  return config
+}, error => {
+  return Promise.reject(error)
+})
+// 设置响应拦截器
+instance2.interceptors.response.use(response => {
+// response 服务器响应回来的数据
+  return response.data.data
+}, error => {
+  return Promise.reject(error)
+})
+
 // 创建一个插件对象
 const myPlugs = {}
 
 // 添加一个 install 方法
 myPlugs.install = function (Vue) {
   Vue.prototype.$http = instance
+  Vue.prototype.$http2 = instance2
 }
 // 暴露插件对象
 export default myPlugs
