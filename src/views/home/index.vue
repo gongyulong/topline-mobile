@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <!-- 顶部标题 -->
-    <van-nav-bar title="首页" fixed />
+    <van-nav-bar title="头条资讯" fixed />
     <div class="tab-content">
       <!-- tab栏 频道列表-->
       <van-tabs v-model="activeTab">
@@ -11,16 +11,20 @@
           <van-pull-refresh v-model="item.pull" @refresh="onRefresh">
             <!-- 上拉刷新list组件  v-model：pull 的加载状态 true 正在加载 false 加载完毕 -->
             <van-list v-model="item.up" :finished="item.finished" finished-text="没有更多了"  @load="onLoad" >
-              <van-cell  class="mycell" v-for="(subitem, subindex) in item.articleList" :key="subindex" :title="subitem.title" />
+              <!-- 文章列表数据 start -->
+              <van-cell  v-for="(subitem, subindex) in item.articleList" :key="subindex" :title="subitem.title" >
+              </van-cell>
             </van-list>
           </van-pull-refresh>
         </van-tab>
         <!-- 图标按钮 -->
         <div class="tab-icon">
-          <van-icon name="wap-nav" />
+          <van-icon name="wap-nav" @click="showPop"/>
         </div>
       </van-tabs>
     </div>
+    <!-- 频道管理: 封装为一个组件 -->
+    <channlepop  v-model="show" :channelsList='channelsList' :activeTab.sync="activeTab"/>
   </div>
 </template>
 
@@ -29,13 +33,18 @@
 import { getChannle } from '@/api/channle.js'
 // 导入请求文章的方法
 import { apigetArticle } from '@/api/article.js'
+// 导入频道管理组件
+import channlepop from '@/components/channelPop'
+
 export default {
   data () {
     return {
       // 频道数据列表
       channelsList: [],
       // 当前选中的van-tabs下标
-      activeTab: 0
+      activeTab: 0,
+      // 控制弹窗的显示和隐藏
+      show: false
     }
   },
   methods: {
@@ -123,7 +132,7 @@ export default {
             with_top: 0
           }
         })
-        console.log(res)
+        // console.log(res)
         // 将数据源追加 到当前频道下的 articleList 中
         channel.articleList = [...channel.articleList, ...res.results]
         // 保存timestamp
@@ -154,11 +163,18 @@ export default {
       this.onLoad()
       // 将下拉状态重置为 false
       channel.pull = false
+    },
+    // 打开弹框显示
+    showPop () {
+      this.show = true
     }
   },
   created () {
     // 页面打开时,加载频道数据
     this.getChannelList()
+  },
+  components: {
+    channlepop
   }
 }
 </script>
@@ -197,8 +213,5 @@ export default {
 .home /deep/ .van-nav-bar {
   height: 50px;
   line-height: 50px;
-}
-.mycell {
-  line-height: 100px;
 }
 </style>
