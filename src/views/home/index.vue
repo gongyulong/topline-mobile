@@ -12,7 +12,28 @@
             <!-- 上拉刷新list组件  v-model：pull 的加载状态 true 正在加载 false 加载完毕 -->
             <van-list v-model="item.up" :finished="item.finished" finished-text="没有更多了"  @load="onLoad" >
               <!-- 文章列表数据 start -->
-              <van-cell  v-for="(subitem, subindex) in item.articleList" :key="subindex" :title="subitem.title" >
+              <van-cell  class = 'mycell' v-for="(subitem, subindex) in item.articleList" :key="subindex" :title="subitem.title" title-class="titlelis">
+                <template slot="label">
+                  <!-- 图片 -->
+                  <van-grid v-if="subitem.cover.type > 0" :border="false" :column-num="3">
+                    <van-grid-item v-for="(imgitem, imgindex) in subitem.cover.images" :key="imgindex">
+                      <van-image lazy-load :src="imgitem"/>
+                    </van-grid-item>
+                  </van-grid>
+                  <!-- 评论 -->
+                  <div class='comlist'>
+                    <div class='fonstyle'>
+                      <span>{{ subitem.aut_name }}</span>
+                      <span>{{ subitem.comm_count }} 评论</span>
+                      <!-- 使用过滤器处理时间 -->
+                      <span>{{ subitem.pubdate | relativetime }}</span>
+                    </div>
+                    <!-- 更多操作按钮 -->
+                    <div>
+                      <van-icon name="cross" @click="openMore(subitem, item.articleList)"/>
+                    </div>
+                  </div>
+                </template>
               </van-cell>
             </van-list>
           </van-pull-refresh>
@@ -25,6 +46,8 @@
     </div>
     <!-- 频道管理: 封装为一个组件 -->
     <channlepop  v-model="show" :channelsList='channelsList' :activeTab.sync="activeTab"/>
+    <!-- 更多操作: 封装为一个组件-->
+    <morePop v-model="moreshow" :articleList="itemList" :objItem="objItem"/>
   </div>
 </template>
 
@@ -35,6 +58,8 @@ import { getChannle } from '@/api/channle.js'
 import { apigetArticle } from '@/api/article.js'
 // 导入频道管理组件
 import channlepop from '@/components/channelPop'
+// 导入更多操作组件
+import morePop from '@/components/morePop'
 
 export default {
   data () {
@@ -43,8 +68,14 @@ export default {
       channelsList: [],
       // 当前选中的van-tabs下标
       activeTab: 0,
-      // 控制弹窗的显示和隐藏
-      show: false
+      // 控制频道管理弹窗的显示和隐藏
+      show: false,
+      // 控制操作管理弹窗的显示和隐藏
+      moreshow: false,
+      // 当前显示数据源
+      itemList: [],
+      // 当前操作的数据对象
+      objItem: {}
     }
   },
   methods: {
@@ -164,9 +195,19 @@ export default {
       // 将下拉状态重置为 false
       channel.pull = false
     },
-    // 打开弹框显示
+    // 打开频道弹框显示
     showPop () {
       this.show = true
+    },
+    // 打开更多操作显示
+    openMore (subitem, itemList) {
+      // 打开更多操作的面板
+      this.moreshow = true
+      // 得到当前文章
+      this.objItem = subitem
+      // 得到当前显示的文章数据源
+      this.itemList = itemList
+      // console.log(itemList)
     }
   },
   created () {
@@ -174,7 +215,10 @@ export default {
     this.getChannelList()
   },
   components: {
-    channlepop
+    // 频道管理弹框
+    channlepop,
+    // 更多操作弹框
+    morePop
   }
 }
 </script>
@@ -213,5 +257,20 @@ export default {
 .home /deep/ .van-nav-bar {
   height: 50px;
   line-height: 50px;
+}
+.titlelis {
+  font-size: 16px;
+  font-weight: 700;
+  .comlist {
+    display: flex;
+    justify-content: space-between;
+    .fonstyle {
+      font-size: 14px;
+      font-weight: 400;
+      span {
+        margin: 0 10px;
+      }
+    }
+  }
 }
 </style>
