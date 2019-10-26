@@ -35,8 +35,20 @@ const routes = [
         path: '/home',
         name: 'home',
         component: () => import('@/views/home')
+      },
+      // searchList 作为布局组件的子路由
+      {
+        path: '/search',
+        name: 'search',
+        component: () => import('@/views/search')
       }
     ]
+  },
+  // searchList 布局路由
+  {
+    path: '/searchList/:key',
+    name: 'search',
+    component: () => import('@/views/searchList')
   }
 ]
 
