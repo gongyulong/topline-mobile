@@ -12,8 +12,10 @@ import Vant, { Lazyload } from 'vant'
 import 'vant/lib/index.css'
 // 导入字体图标
 import '@/styles/index.css'
-// 导入axios自定义插件
+// 导入自己封装axios插件
 import axiosPlug from '@/utils/request.js'
+// 导入自己封装的登录插件
+import loginPlugs from '@/utils/loginplugs'
 // 导入第三包 dayjs
 import dayjs from 'dayjs'
 // 导入 dayjs 的相对时间 插件
@@ -27,8 +29,9 @@ import 'dayjs/locale/zh-cn'
 Vue.use(Vant)
 Vue.config.productionTip = false
 
-// 在 vue 中使用axiosPlug
+// 在 vue 中使用自定义插件 axiosPlug loginPlugs
 Vue.use(axiosPlug)
+Vue.use(loginPlugs)
 
 // 使用图片懒加载
 Vue.use(Lazyload)

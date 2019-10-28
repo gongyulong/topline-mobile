@@ -24,6 +24,12 @@ const routes = [
     name: 'login',
     component: () => import('@/views/login')
   },
+  // login 登录验证路由
+  {
+    path: '/login/nologin',
+    name: 'nologin',
+    component: () => import('@/views/login')
+  },
   // layout 布局路由
   {
     path: '/layout',
@@ -47,8 +53,14 @@ const routes = [
   // searchList 布局路由
   {
     path: '/searchList/:key',
-    name: 'search',
+    name: 'searchList',
     component: () => import('@/views/searchList')
+  },
+  // detail 详情路由
+  {
+    path: '/detail/:artid',
+    name: 'detail',
+    component: () => import('@/views/detail')
   }
 ]
 

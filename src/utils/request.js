@@ -9,6 +9,12 @@ import store from '@/store'
 const instance = axios.create({
   baseURL: 'http://ttapi.research.itcast.cn/app/v1_0' // 请求基准地址
 })
+
+// 创建登陆验证 axios 实例：请求接口： /authroizations
+const refreshInstacn = axios.create({
+  baseURL: 'http://ttapi.research.itcast.cn/app/v1_0'
+})
+
 // 设置请求拦截器
 instance.interceptors.request.use(config => {
   // console.log(store.state)
@@ -28,7 +34,28 @@ instance.interceptors.request.use(config => {
 instance.interceptors.response.use(response => {
 // response 服务器响应回来的数据
   return response.data.data
-}, error => {
+}, async function (error) {
+  if (error.response.status === 401) {
+    // 得到 refresh_token token
+    let user = store.state.user
+    // 1.0 发送请求到服务器：传入 refresh_token ，得到新的 token
+    let res = await refreshInstacn({
+      url: '/authorizations',
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${user.refresh_token}` // refresh_token
+      }
+    })
+    // 更新后的 token：res.data.data.token
+    user.token = res.data.data.token
+    store.commit('setUser', user)
+    // console.log('---------------测试更新token------------------------')
+    // console.log(store.state.user)
+    // console.log('---------------测试更新token------------------------')
+    // token 已经更新了：需要重新发送请求
+    return instance(error.config)
+  }
+  // 错误处理
   return Promise.reject(error)
 })
 

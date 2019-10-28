@@ -89,8 +89,13 @@ export default {
         this.$store.commit('setUser', res)
         // 关闭加载动画
         this.loginLoading = false
-        // 跳转到 home
-        this.$router.push('/home')
+        // 判断当前路由（解决新人登陆Login跳转空白页bug）
+        // 跳转到 home (back回退到跳转前页面)
+        if (this.$route.path !== '/login') {
+          this.$router.back()
+        } else {
+          this.$router.push('/home')
+        }
       } catch (err) {
         console.log(err)
         this.$toast.fail('手机号或者验证码有误')

@@ -16,8 +16,28 @@ function apiBalckList (axios, { url, method, data }) {
     data
   })
 }
+// 取消关注用户
+function apiUnFollow (axios, userId) {
+  return axios({
+    url: `/user/followings/${userId}`,
+    method: 'DELETE'
+  })
+}
+
+// 关注用户
+function apiFollow (axios, userId) {
+  return axios({
+    url: `/user/followings`,
+    method: 'post',
+    data: {
+      target: userId
+    }
+  })
+}
 // 暴露给外界：按需导出
 export {
   userLogin,
-  apiBalckList
+  apiBalckList,
+  apiUnFollow,
+  apiFollow
 }
