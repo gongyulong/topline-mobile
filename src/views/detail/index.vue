@@ -47,17 +47,23 @@
           不喜欢
         </van-button>
     </div>
-    <!-- 6.0 评论留言 -->
-    <div v-for="(item, index) in 8" :key='index'>
-        <leaveword />
-    </div>
+    <!-- 6.0 评论留言组件 -->
+    <van-list v-model='loading' :finished='finished' finished-text='没有更多了' @load='onLoad'>
+      <div v-for="(item, index) in commonList" :key='index'>
+        <!-- isa 回复框-给文章添加评论 -->
+        <leaveword :itemobj='item' v-model='show' :isa="true"/>
+      </div>
+    </van-list>
     <!-- 7.0 留言输入框 -->
-    <addword :detaiList='detaiList'/>
+    <!-- isa 文章评论框 -->
+    <addword :detaiList='detaiList' :commonList='commonList' :isa="true"/>
+    <!-- 8.0  回复留言的面板组件-->
+    <Reply v-model="show" :artid='artid'/>
   </div>
 </template>
 
 <script>
-// 导入 留言
+// 导入 留言区域
 import leaveword from '@/components/leaveword'
 // 导入 留言输入框
 import addword from '@/components/addword'
@@ -65,16 +71,27 @@ import addword from '@/components/addword'
 import { apicomArticle } from '@/api/article'
 // 导入 取关的 接口
 import { apiUnFollow, apiFollow } from '@/api/user'
+// 导入 评论的 接口
+import { apiGetpageComment } from '@/api/commen'
+// 导入 评论的 接口
+import Reply from '@/components/reply'
 
 export default {
   data () {
     return {
-      artid: '',
-      detaiList: {}
+      artid: '', // 文章id
+      detaiList: {}, // 文章详情数据
+      commonList: [], // 文章评论数据
+      loading: false, // list 加载状态
+      finished: false, // list 是否完毕状态
+      endid: '', // 结束id
+      limit: 10, // 每页的条数
+      offset: '', // 文章的偏移量
+      show: false // 回复面板的显示
     }
   },
   methods: {
-    // 得到文章详情
+    // 1.0 得到文章详情
     async getArtieDetail () {
       let res = await apicomArticle(this.$http, this.artid)
       // console.log('--------------------------------')
@@ -82,7 +99,7 @@ export default {
       // console.log('--------------------------------')
       this.detaiList = res
     },
-    // 关注 & 取消关注
+    // 2.0 关注 & 取消关注
     async follow () {
       // 得到当前作者的关注状态
       let isFollow = this.detaiList.is_followed
@@ -102,11 +119,34 @@ export default {
         // 将数据源中关注状态改为已经关注
         this.detaiList.is_followed = true
       }
+    },
+    // 3.0 加载评论数据
+    async onLoad () {
+      // 请求数据源 commonList
+      let res = await apiGetpageComment(this.$http, {
+        source: this.artid,
+        offset: this.offset || undefined,
+        limit: this.limit
+      })
+      // console.log(res)
+      // 保存 评论数据
+      this.commonList = [...this.commonList, ...res.results]
+      // 保存结束 id
+      this.endid = res.end_id
+      // 保存偏移量（分页）
+      this.offset = res.last_id
+      // 解决评论数据过多bug
+      if (this.offset === this.endid) {
+        this.finished = true
+      }
+      // 重新加载 状态(解决底部一直加载BUG))
+      this.loading = false
     }
   },
   components: {
     leaveword,
-    addword
+    addword,
+    Reply
   },
   created () {
     // 得到文章 id

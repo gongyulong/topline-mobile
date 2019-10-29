@@ -40,11 +40,26 @@ function apiSetCommetForArticle (axios, { target, content }) {
     }
   })
 }
+
+// 给评论添加回复
+function apiSetReplyForComment (axios, { target, content, artid }) {
+  return axios({
+    url: '/comments',
+    method: 'POST',
+    data: {
+      target,
+      content,
+      art_id: artid
+    }
+  })
+}
+
 // 暴露给外界：按需导出
 export {
   apigetArticle,
   apiOperaArticle,
   apiReportArticle,
   apicomArticle,
-  apiSetCommetForArticle
+  apiSetCommetForArticle,
+  apiSetReplyForComment
 }

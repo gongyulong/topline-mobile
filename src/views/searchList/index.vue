@@ -1,15 +1,15 @@
 <template>
   <div class="searchList">
-    <!-- 搜索列表 -->
+    <!-- 1.0搜索列表 -->
     <van-nav-bar title="搜索列表" fixed />
-    <!-- 使用vant中的list组件分页 -->
+    <!-- 2.0 使用vant中的list组件分页 -->
     <van-list
       v-model="loading"
       :finished="finished"
       finished-text="没有更多了"
       @load="onLoad"
     >
-    <!-- 渲染数据源 -->
+    <!-- 3.0 渲染数据源 -->
     <van-cell-group>
       <van-cell @click='todetail(item.art_id)' class='mycell' v-for="(item, index) in searchResult" :key="index" :title="item.title" >
         <template slot="label">
@@ -95,7 +95,7 @@ export default {
         q: this.key
       })
       // console.log(res)
-      // 保存搜索结果数据源
+      // 追加保存搜索结果数据源
       this.searchResult = [...this.searchResult, ...res.results]
       // 判断：数据源是否请求结束
       if (this.searchResult.length === this.totalCount) {

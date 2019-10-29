@@ -5,9 +5,20 @@
 import axios from 'axios'
 // 导入store
 import store from '@/store'
+// 导入 JSON-bigint
+import JSONBig from 'json-bigint'
+
 // 创建一个 axios 实例
 const instance = axios.create({
-  baseURL: 'http://ttapi.research.itcast.cn/app/v1_0' // 请求基准地址
+  baseURL: 'http://ttapi.research.itcast.cn/app/v1_0', // 请求基准地址
+  transformResponse: [function (data) {
+    try {
+      return JSONBig.parse(data)
+    } catch (err) {
+      console.log(err)
+      return data
+    }
+  }]
 })
 
 // 创建登陆验证 axios 实例：请求接口： /authroizations

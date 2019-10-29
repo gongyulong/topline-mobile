@@ -1,26 +1,27 @@
 <template>
   <div>
-    <!-- 显示留言 -->
+    <!-- 1.0 显示留言 -->
     <van-cell>
       <template slot="title">
         <div>
-          <!-- 图片 -->
+          <!-- 2.0 图片 -->
           <div class="t-img">
-            <img src='https://ss0.baidu.com/73t1bjeh1BF3odCf/it/u=494030861,2564153321&fm=85&s=4AF839C480220505CD1921A30300D016' alt />
+            <img :src='itemobj.aut_photo' alt="" />
           </div>
-          <!-- 作者 -->
+          <!-- 3.0 作者 -->
           <div class="t-msg">
             <div class="nname">
-              <div class="nickname">晚风</div>
+              <div class="nickname">{{itemobj.aut_name}}</div>
               <div class="icon">
                 <van-icon name="good-job-o" />
+                {{itemobj.like_count}}
               </div>
             </div>
-            <div class="content">我出去</div>
-            <!-- 留言时间 -->
+            <div class="content">{{itemobj.content}}</div>
+            <!-- 4.0 留言时间 -->
             <div class="time">
-              <span>10-28 11:00</span>
-              <van-button type="default" size="small">18回复</van-button>
+              <span>{{itemobj.pubdate}}</span>
+              <van-button v-if="isa === true" type="default" size="small" @click='reply()'>回复：{{ itemobj.reply_count }}</van-button>
             </div>
           </div>
         </div>
@@ -30,20 +31,23 @@
 </template>
 
 <script>
-export default {}
+// 导入bus 将itemobj参数给 bus
+import bus from '@/utils/bus'
+export default {
+  props: ['itemobj', 'value', 'isa'],
+  methods: {
+    reply () {
+      this.$emit('input', true)
+      // 将参数通过bus 交给面板
+      bus.$emit('commenitem', this.itemobj)
+    }
+  }
+}
 </script>
 
 <style lang="less" scoped>
 .comment {
     display: flex;
-    .t-img {
-        margin-right: 10px;
-        img {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-        }
-    }
     .t-msg {
         .nname {
             display: flex;
@@ -55,5 +59,13 @@ export default {}
             margin: 20px 0;
         }
     }
+}
+.t-img {
+  margin-right: 10px;
+  img {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+  }
 }
 </style>
