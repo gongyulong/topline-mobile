@@ -61,6 +61,12 @@ const routes = [
     path: '/detail/:artid',
     name: 'detail',
     component: () => import('@/views/detail')
+  },
+  // chat 小智聊天路由
+  {
+    path: '/chat',
+    name: 'chat',
+    component: () => import('@/views/chat')
   }
 ]
 
